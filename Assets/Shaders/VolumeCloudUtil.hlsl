@@ -1,12 +1,19 @@
 #ifndef __VOLUMECLOUDUTIL__HLSL__
 #define __VOLUMECLOUDUTIL__HLSL__
 
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+
+TEXTURE3D(_NoiceTexture);
+SAMPLER(sampler_NoiceTexture);
+
 float _RayMarchingStride;
 float4 _CloudBoxMin;
 float4 _CloudBoxMax;
-sampler3D _NoiceTexture;
 float _NoiceTexScale;
-float4 _NoicSampleOffset;
+float4 _NoiceSampleOffset;
+
 
 // 判断射线与AABB盒是否相交，返回 (是否相交， 射线远点与包围盒的最短距离)
 float2 RayInsertBox(float3 boxMin, float3 boxMax, float3 origin, float3 invDir)
@@ -16,7 +23,7 @@ float2 RayInsertBox(float3 boxMin, float3 boxMax, float3 origin, float3 invDir)
     float3 tMins = (boxMin - origin) * invDir;    // invDir为(1/x,1/y,1/z)
     float3 tMaxs = (boxMax - origin) * invDir;
     for (int i = 0; i < 3; ++i) {
-        if (!dirIsNeg[i]) {  // 若该轴为负从tMax进，tMin出,需要交换
+        if (dirIsNeg[i] != 0) {  // 若该轴为负从tMax进，tMin出,需要交换
             float tmp = tMins[i];
             tMins[i] = tMaxs[i];
             tMaxs[i] = tmp;
@@ -31,17 +38,18 @@ float2 RayInsertBox(float3 boxMin, float3 boxMax, float3 origin, float3 invDir)
     return float2(1, tMin);
 }
 
-float SampleDensity(sampler3D noiceTexture, float3 pos)
+float SampleDensity(Texture3D noiceTexture, float3 pos)
 {
-    float3 uvw = pos * _NoiceTexScale + _NoicSampleOffset.xyz;
-    return tex3D(noiceTexture, uvw).r;
+    float3 uvw = pos * _NoiceTexScale + _NoiceSampleOffset.xyz;
+    return SAMPLE_TEXTURE3D(noiceTexture, sampler_NoiceTexture, uvw).r;
 }
 
 // 从散射点计算来自光源的光照
-float3 LightMarching(float3 currPos, float3 lightPos)
+float3 LightMarching(float3 currPos)
 {
+    Light light = GetMainLight();
     float sumDensity = 0;
-    float3 lightDir = normalize(lightPos - currPos);
+    float3 lightDir = light.direction;
     float3 step  = lightDir * _RayMarchingStride;
     // 计算光线与包围盒的交点
     float3 invDir = float3(1 / lightDir.x, 1/lightDir.y,1/ lightDir.z);
@@ -75,7 +83,7 @@ float3 VolumeCloudRayMarching(float3 starPos, float3 dir, float3 posW)
     [loop]
     for(float i = 0; i < limitLen; i += _RayMarchingStride) {
         float density = SampleDensity(_NoiceTexture, currPos.xyz);
-        sumDensity += LightMarching(currPos, _WorldSpaceLightPos0.xyz);      // 计算来自主光源的光照
+        sumDensity += LightMarching(currPos);      // 计算来自主光源的光照
         transmittance *= exp(-density * _RayMarchingStride);        // 云的密度越大，衰减越严重
         currPos += step;
     }

@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 791362b32eac6684baacb23704ba2b75
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - testObject: {instanceID: 0}
+  - volumeCloudShader: {fileID: 4800000, guid: f406d800f3a8e8245aa9ab08a53acb9f, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

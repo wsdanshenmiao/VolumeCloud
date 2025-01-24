@@ -1,8 +1,16 @@
 #ifndef __VOLUMECLOUD__HLSL__
 #define __VOLUMECLOUD__HLSL__
 
-#include "UnityCG.cginc"
 #include "VolumeCloudUtil.hlsl"
+
+TEXTURE2D(_MainTex);
+TEXTURE2D( _CameraDepthTexture);
+
+SAMPLER(sampler_CameraDepthTexture);
+SAMPLER(sampler_MainTex);
+
+float4 _MainTex_TexelSize;
+float4x4 _FrustumCorners;
 
 struct volumeCloudData
 {
@@ -17,15 +25,12 @@ struct volumeCloudV2f
     float3 interpolatedRay : TEXCOORD1;
 };
 
-sampler2D _MainTex;
-sampler2D _CameraDepthTexture;
-float4 _MainTex_TexelSize;
-float4x4 _FrustumCorners;
-
 volumeCloudV2f vertVolumeCloud (volumeCloudData v)
 {
     volumeCloudV2f o;
-    o.vertex = UnityObjectToClipPos(v.vertex);
+    VertexPositionInputs positionInputs = GetVertexPositionInputs(v.vertex.xyz);
+    o.vertex = positionInputs.positionCS;
+
     float2 uv = v.uv;
     o.uv = v.uv.xyxy;
 
@@ -58,12 +63,17 @@ volumeCloudV2f vertVolumeCloud (volumeCloudData v)
 
 float4 fragVolumeCloud (volumeCloudV2f i) : SV_Target
 {
-    float linearDepth = LinearEyeDepth(SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv.zw));
+    float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture, i.uv.zw);
+    float linearDepth = LinearEyeDepth(depth, _ZBufferParams);
     float3 posW = _WorldSpaceCameraPos.xyz + i.interpolatedRay * linearDepth; // 复原世界坐标
     float3 dir = normalize(posW - _WorldSpaceCameraPos.xyz);
+
     float3 cloud = VolumeCloudRayMarching(_WorldSpaceCameraPos.xyz, dir, posW);
-    float4 preCol = tex2D(_MainTex, i.uv.xy);
-    return float4(preCol.xyz + cloud.xyz, preCol.a);
+    
+    float4 preCol = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv.xy);
+    preCol = float4(preCol.xyz + cloud.xyz, preCol.a);
+
+    return preCol;
 }
 
 
