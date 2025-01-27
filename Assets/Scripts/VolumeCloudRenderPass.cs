@@ -1,4 +1,5 @@
 using System;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -52,8 +53,15 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
 
     private void Render(CommandBuffer cmd)
     {
+        Vector3 cloudCenter = m_VolumeCloudParamer.m_CloudBoxCenter.value;
+        Vector3 cloudSize = m_VolumeCloudParamer.m_CloudBoxSize.value;
+        Vector3 cloudBoxMin = cloudCenter + cloudSize * .5f;
+        Vector3 cloudBoxMax = cloudCenter - cloudSize * .5f;
+
         m_VolumeCloudMat.SetTexture("_BackgroundTex", m_RenderTarget);
         m_VolumeCloudMat.SetFloat("_RayMarchingStride", m_VolumeCloudParamer.m_RayMarchingStride.value);
+        m_VolumeCloudMat.SetVector("_CloudBoxMin", cloudBoxMin);
+        m_VolumeCloudMat.SetVector("_CloudBoxMax", cloudBoxMax);
 
         cmd.Blit(m_RenderTarget, m_RenderTarget, m_VolumeCloudMat, 0);
     }
