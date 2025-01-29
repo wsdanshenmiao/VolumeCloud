@@ -34,5 +34,23 @@ float3 RayInsertBox(float3 boxMin, float3 boxMax, float3 origin, float3 invDir)
     }
 }
 
+// 重映射函数，将 value 从 (lo, ho) 映射到 (ln, hn)
+float Remap(float value, float lo, float ho, float ln, float hn)
+{
+    return ln + (value - lo) * (hn - ln) / (ho - lo);
+}
+
+// Beer–Lambert law
+// depth 为光学深度, 返回透射率
+float BeerLambert(float depth)
+{
+    return exp(-depth);
+}
+
+// 计算吸光率, A = t * d * l (t为消光系数,d为密度,l为距离)
+float CalcuAbsorbance(float t, float d, float l)
+{
+    return t * d * l;
+}
 
 #endif
