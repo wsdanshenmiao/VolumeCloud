@@ -7,8 +7,11 @@ public class VolumeCloudParamer : VolumeComponent, IPostProcessComponent
     [Tooltip("编辑模式时渲染云")]
     public BoolParameter m_EnableInEdit = new BoolParameter(false);
     
-    [Tooltip("步进步长")]
-    public ClampedFloatParameter m_RayMarchingStride = new ClampedFloatParameter(.5f, .2f, 10);
+    [Tooltip("采样形状的最大步进次数")]
+    public ClampedIntParameter m_ShapeMarchingCount = new ClampedIntParameter(50, 10, 200);
+    [Tooltip("采样光照的最大步进次数")]
+    public ClampedIntParameter m_LightMarchingCount = new ClampedIntParameter(20, 5, 50);
+
     [Tooltip("光照阈值")]
     public ClampedFloatParameter m_DarknessThreshold = new ClampedFloatParameter(.2f, 0, 1);
     [Tooltip("消光系数")]
@@ -18,7 +21,7 @@ public class VolumeCloudParamer : VolumeComponent, IPostProcessComponent
     [Tooltip("纹理坐标缩放")]
     public FloatParameter m_SampleNoiceScale = new FloatParameter(1);
     [Tooltip("密度阈值")]
-    public ClampedFloatParameter m_DensityThreshold = new ClampedFloatParameter(.2f, 0, 1);
+    public ClampedFloatParameter m_DensityThreshold = new ClampedFloatParameter(.2f, -10, 10);
     [Tooltip("密度缩放")]
     public FloatParameter m_DensityMultiplier = new FloatParameter(1);
 
@@ -28,6 +31,8 @@ public class VolumeCloudParamer : VolumeComponent, IPostProcessComponent
     public Vector3Parameter m_CloudBoxSize = new Vector3Parameter(Vector3.one);
     [Tooltip("纹理坐标偏移")]
     public Vector3Parameter m_SampleNoiceOffset = new Vector3Parameter(Vector3.zero);
+    [Tooltip("细节控制权重")]
+    public Vector3Parameter m_DetailWeights = new Vector3Parameter(Vector3.one);
 
 
     [Tooltip("形状控制权重")]

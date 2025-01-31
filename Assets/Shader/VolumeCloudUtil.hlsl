@@ -13,11 +13,10 @@ struct Ray
 float3 RayInsertBox(float3 boxMin, float3 boxMax, float3 origin, float3 invDir)
 {
     // 三个轴的 tEnter 和 tExit
-    int3 dirIsNeg = int3(int(invDir.x > 0), int(invDir.y > 0), int(invDir.z > 0));
     float3 tMins = (boxMin - origin) * invDir;    // invDir为(1/x,1/y,1/z)
     float3 tMaxs = (boxMax - origin) * invDir;
     for (int i = 0; i < 3; ++i) {
-        if (dirIsNeg[i] != 0) {  // 若该轴为负从tMax进，tMin出,需要交换
+        if (invDir[i] < 0) {  // 若该轴为负从tMax进，tMin出,需要交换
             float tmp = tMins[i];
             tMins[i] = tMaxs[i];
             tMaxs[i] = tmp;
@@ -51,6 +50,13 @@ float BeerLambert(float depth)
 float CalcuAbsorbance(float t, float d, float l)
 {
     return t * d * l;
+}
+
+// 计算某点的高度梯度
+float GetDensityHeightGradient(float3 pos, float min, float max)
+{
+    float heightGradient = (pos.y - min) / (max - min);
+    return saturate(heightGradient);
 }
 
 #endif

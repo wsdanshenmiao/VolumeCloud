@@ -47,39 +47,45 @@ MonoBehaviour:
   m_EnableInEdit:
     m_OverrideState: 1
     m_Value: 1
-  m_RayMarchingStride:
+  m_ShapeMarchingCount:
     m_OverrideState: 1
-    m_Value: 3.49
+    m_Value: 117
+  m_LightMarchingCount:
+    m_OverrideState: 1
+    m_Value: 10
   m_DarknessThreshold:
     m_OverrideState: 1
-    m_Value: 0.029
+    m_Value: 0.01
   m_ExtinctionCoefficient:
     m_OverrideState: 1
-    m_Value: 0.89
+    m_Value: 0.034
   m_DensityOffset:
     m_OverrideState: 1
-    m_Value: -7.51
+    m_Value: 7.55
   m_SampleNoiceScale:
     m_OverrideState: 1
-    m_Value: 0.25
+    m_Value: 0.26
   m_DensityThreshold:
     m_OverrideState: 1
     m_Value: 0
   m_DensityMultiplier:
     m_OverrideState: 1
-    m_Value: 1.05
+    m_Value: 1
   m_CloudBoxCenter:
     m_OverrideState: 1
-    m_Value: {x: 0, y: 1000, z: 0}
+    m_Value: {x: 0, y: 1500, z: 0}
   m_CloudBoxSize:
     m_OverrideState: 1
-    m_Value: {x: 4000, y: 400, z: 4000}
+    m_Value: {x: 8000, y: 400, z: 8000}
   m_SampleNoiceOffset:
     m_OverrideState: 1
-    m_Value: {x: 0, y: 0, z: 0}
+    m_Value: {x: 0, y: 401.98, z: 0}
+  m_DetailWeights:
+    m_OverrideState: 1
+    m_Value: {x: 0.64, y: 0.25, z: 0.125}
   m_ShapeWeights:
     m_OverrideState: 1
-    m_Value: {x: 1, y: 0.9, z: 1.25, w: 1.16}
+    m_Value: {x: 1, y: 0.64, z: 0.25, w: 0.125}
   m_ShapeNoiceTex:
     m_OverrideState: 1
     m_Value: {fileID: 11700000, guid: 70c2adccd53fd45468d11570134863c2, type: 2}
