@@ -25,8 +25,11 @@ float4 _CloudBoxMax;
 float4 _ShapeWeights;
 float4 _DetailWeights;
 
-float4 _SampleNoiceOffset;
-float _SampleNoiceScale;
+float4 _SampleShapeOffset;
+float _SampleShapeScale;
+
+float4 _SampleDetailOffset;
+float _SampleDetailScale;
 
 int _ShapeMarchingCount;
 int _LightMarchingCount;
@@ -34,8 +37,10 @@ int _LightMarchingCount;
 float _DarknessThreshold;
 
 float _ExtinctionCoefficient;
+float _CloudScatter;
 
 float _DensityOffset;
+float _DetailScale;
 float _DensityThreshold;
 float _DensityMultiplier;
 CBUFFER_END
@@ -53,12 +58,14 @@ struct v2f
 };
 
 
-float GetDensity(float3 currPos)
+float SampleDensity(float3 currPos, out float absorptivity)
 {
     float density = 0;
     // 复原体积云的范围信息
     float3 cloudCenter = (_CloudBoxMin + _CloudBoxMax).xyz * 0.5;
     float3 cloudSize = (_CloudBoxMax - _CloudBoxMin).xyz;
+
+    float3 uvw = currPos * 0.0001;
 
     // 边缘的衰减
     float edgeFadeDistance = 100;
@@ -68,12 +75,12 @@ float GetDensity(float3 currPos)
 
 
     // 获取体积云的基本形状
-    float3 uvw = (currPos + _SampleNoiceOffset.xyz) * 0.001 * _SampleNoiceScale;
+    float3 sampleShapeUV = uvw * _SampleShapeScale + _SampleShapeOffset.xyz;
     // 获取低频 Perlin-Worley 和 Worley 噪声
-    float4 shapeNoice = SAMPLE_TEXTURE3D(_ShapeNoiceTex, sampler_ShapeNoiceTex, uvw);
+    float4 shapeNoice = SAMPLE_TEXTURE3D(_ShapeNoiceTex, sampler_ShapeNoiceTex, sampleShapeUV);
     // 计算不同频率 Worley 噪声所构成的 FBM 为基础形状添加细节
     // FBM 是一系列噪声的叠加，每一个噪声都有更高的频率和更低的幅度。
-    float shapeFBM = dot(shapeNoice.gba, _ShapeWeights.gba);
+    float shapeFBM = dot(shapeNoice.gba, normalize(_ShapeWeights.rgb));
     // 使用 FBM 重映射体积云的密度
     density = Remap(shapeNoice.r, saturate(1 - shapeFBM), 1, 0, 1);
 
@@ -91,9 +98,9 @@ float GetDensity(float3 currPos)
     float densityTop = saturate(Remap(heightGradient, 0.9, 1, 1, 0));
     float densityFac = densityButton * densityTop * 2;
 
-    density *= roundFac * densityFac;
+    density *= roundFac * densityFac * edgeFade;
 
-    if(density > 0){
+    if(density > 0) {
         // 为体积云添加天气属性
         float2 weatherUV = (currPos.xz - cloudCenter.xz) / max(cloudSize.x, cloudSize.z);
         // 获取天气纹理, r 通道存取体积云的覆盖百分比，g 通道存取云层降雨的可能性， b 通道存取云的类型
@@ -101,15 +108,18 @@ float GetDensity(float3 currPos)
         // 云层覆盖率
         float cloudCoverage = weatherTex.r;
         // density = Remap(density, cloudCoverage, 1, 0, 1);
-        density *= cloudCoverage * weatherTex.g;
+        absorptivity = weatherTex.g;
+        density *= cloudCoverage;
 
         if(density > 0){
             // 为云添加细节
+            float3 sampleDetailUV = uvw * _SampleDetailScale + _SampleDetailOffset.xyz;
             // 获取高频的 Worley 噪声
-            float3 detailNoice = SAMPLE_TEXTURE3D(_DetailNoiceTex, sampler_DetailNoiceTex, uvw).rgb;
+            float3 detailNoice = SAMPLE_TEXTURE3D(_DetailNoiceTex, sampler_DetailNoiceTex, sampleDetailUV).rgb;
             // 计算 Worley 噪声的FBM
-            float detailFBM = dot(detailNoice, _DetailWeights.xyz);
-            density = Remap(density, detailFBM * 0.01, 1, 0, 1);
+            float detailFBM = dot(detailNoice, normalize(_DetailWeights.xyz));
+            float detailErode = (1 - detailFBM) * 0.001 * _DetailScale;
+            density -= detailErode;
         }
     } 
 
@@ -124,6 +134,7 @@ float LightMarching(float3 currPos, float3 lightDir)
     // 总密度
     float3 sumDensity = 0;
     float transmittance = 1;
+    float absorptivity = 1;
 
     float3 invDir = 1 / lightDir;
 
@@ -133,20 +144,20 @@ float LightMarching(float3 currPos, float3 lightDir)
         float3 rayStep = lightDir * stepSize;
         [loop]
         for(int i = 0; i < _LightMarchingCount; currPos += rayStep, ++i){
-            float density = GetDensity(currPos) * stepSize;
+            float density = SampleDensity(currPos, absorptivity) * stepSize;
             sumDensity += density;
         }
     }
 
     // 计算透光率
-    float absorbance = CalcuAbsorbance(_ExtinctionCoefficient, sumDensity, insertInfo.z);
+    float absorbance = absorptivity * _ExtinctionCoefficient * sumDensity;
     transmittance = BeerLambert(absorbance);
 
     return _DarknessThreshold + (1 - _DarknessThreshold) * transmittance;
 }
 
 // 从相机出发，沿观察方向进行raymarching
-float3 VolumeCloudRaymarching(Ray viewRay, float linearDepth, out float transmittance)
+float3 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, out float transmittance)
 {
     // 总密度
     float sumDensity = 0;
@@ -154,14 +165,15 @@ float3 VolumeCloudRaymarching(Ray viewRay, float linearDepth, out float transmit
     transmittance = 1;
     // 光照强度
     float3 lightIntensity = 0;
+    float absorptivity = 1;
 
     float3 currPos = viewRay.startPos;
     float3 rayDir = viewRay.dir;
 
     float3 invDir = 1 / rayDir;
 
-    Light mainLight = GetMainLight();
-    float3 lightDir = normalize(mainLight.direction);
+    float cos = dot(rayDir, lightDir);
+    float phase = HenyeyGreenstein(cos, _CloudScatter);
 
     // 相机视线与包围盒相交
     float3 insertInfo = RayInsertBox(_CloudBoxMin.xyz, _CloudBoxMax.xyz, currPos, invDir);
@@ -177,15 +189,15 @@ float3 VolumeCloudRaymarching(Ray viewRay, float linearDepth, out float transmit
         float3 rayStep = rayDir * stepSize;
 
         [loop]
-        for(int i = 0; i < _ShapeMarchingCount; ++i){
-            currPos += rayStep;
+        for(int i = 0; i < _ShapeMarchingCount; currPos += rayStep, ++i){
             // 计算当前点的密度
-            float density = GetDensity(currPos);
+            float density = SampleDensity(currPos, absorptivity) * stepSize;
 
             if(density > 0){
-                lightIntensity += density * stepSize * transmittance * LightMarching(currPos, lightDir);
+                float lightDensity = LightMarching(currPos, lightDir);
+                lightIntensity += density * transmittance * lightDensity * phase;
                 // 计算吸光率
-                float absorbance = CalcuAbsorbance(_ExtinctionCoefficient, density, stepSize);
+                float absorbance = absorptivity * _ExtinctionCoefficient * density;
                 transmittance *= BeerLambert(absorbance);
                 sumDensity += density;
                 
@@ -231,12 +243,16 @@ float4 fragVolumeCloud(v2f i) : SV_Target
         posW /= posW.w;
     #endif
 
+    Light mainLight = GetMainLight();
+    float3 lightDir = normalize(mainLight.direction);
+
     float3 cameraPosW = GetCameraPositionWS();
     float transmittance = 1;
     Ray ray;
     ray.startPos = cameraPosW;
     ray.dir = normalize(posW.xyz - cameraPosW);
-    float3 cloudCol = VolumeCloudRaymarching(ray, linearDepth, transmittance);
+    float3 cloudCol = VolumeCloudRaymarching(ray, lightDir, linearDepth, transmittance);
+    cloudCol *= mainLight.color;
 
     // 获取背景颜色
     float4 preColor = SAMPLE_TEXTURE2D(_BackgroundTex, sampler_BackgroundTex, i.uv);

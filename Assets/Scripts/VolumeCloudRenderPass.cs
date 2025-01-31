@@ -60,19 +60,23 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
 
         m_VolumeCloudMat.SetTexture("_BackgroundTex", m_RenderTarget);
         m_VolumeCloudMat.SetTexture("_ShapeNoiceTex", m_VolumeCloudParamer.m_ShapeNoiceTex.value);
-        m_VolumeCloudMat.SetTexture("(_DetailNoiceTex", m_VolumeCloudParamer.m_DetailNoiceTex.value);
+        m_VolumeCloudMat.SetTexture("_DetailNoiceTex", m_VolumeCloudParamer.m_DetailNoiceTex.value);
 
         m_VolumeCloudMat.SetInt("_ShapeMarchingCount", m_VolumeCloudParamer.m_ShapeMarchingCount.value);
         m_VolumeCloudMat.SetInt("_LightMarchingCount", m_VolumeCloudParamer.m_LightMarchingCount.value);
         
-        m_VolumeCloudMat.SetFloat("_SampleNoiceScale", m_VolumeCloudParamer.m_SampleNoiceScale.value);
+        m_VolumeCloudMat.SetFloat("_SampleShapeScale", m_VolumeCloudParamer.m_SampleShapeScale.value);
+        m_VolumeCloudMat.SetFloat("_SampleDetailScale", m_VolumeCloudParamer.m_SampleDetailScale.value);
         m_VolumeCloudMat.SetFloat("_DarknessThreshold", m_VolumeCloudParamer.m_DarknessThreshold.value);
         m_VolumeCloudMat.SetFloat("_ExtinctionCoefficient", m_VolumeCloudParamer.m_ExtinctionCoefficient.value);
         m_VolumeCloudMat.SetFloat("_DensityOffset", m_VolumeCloudParamer.m_DensityOffset.value);
         m_VolumeCloudMat.SetFloat("_DensityThreshold", m_VolumeCloudParamer.m_DensityThreshold.value);
         m_VolumeCloudMat.SetFloat("_DensityMultiplier", m_VolumeCloudParamer.m_DensityMultiplier.value);
+        m_VolumeCloudMat.SetFloat("_DetailScale", m_VolumeCloudParamer.m_DetailScale.value);
+        m_VolumeCloudMat.SetFloat("_CloudScatter", m_VolumeCloudParamer.m_CloudScatter.value);
 
-        m_VolumeCloudMat.SetVector("_SampleNoiceOffset", m_VolumeCloudParamer.m_SampleNoiceOffset.value);
+        m_VolumeCloudMat.SetVector("_SampleShapeOffset", m_VolumeCloudParamer.m_SampleShapeOffset.value);
+        m_VolumeCloudMat.SetVector("_SampleDetailOffset", m_VolumeCloudParamer.m_SampleDetailOffset.value);
         m_VolumeCloudMat.SetVector("_CloudBoxMin", cloudBoxMin);
         m_VolumeCloudMat.SetVector("_ShapeWeights", m_VolumeCloudParamer.m_ShapeWeights.value);
         m_VolumeCloudMat.SetVector("_DetailWeights", m_VolumeCloudParamer.m_DetailWeights.value);

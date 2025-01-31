@@ -1,6 +1,9 @@
 #ifndef __VOLUMECLOUDUTIL__HLSL__
 #define __VOLUMECLOUDUTIL__HLSL__
 
+#ifndef M_PI
+#define M_PI 3.14159265359
+#endif
 
 struct Ray
 {
@@ -57,6 +60,24 @@ float GetDensityHeightGradient(float3 pos, float min, float max)
 {
     float heightGradient = (pos.y - min) / (max - min);
     return saturate(heightGradient);
+}
+
+// 改编自 Henyey-Greenstein 函数， 双 Henyey-Greenstein相位函数 的 单参数版 (原双相位函数拥有3个参数, 要确定3个参数非常复杂)
+// g : ( -0.75, -0.999 )
+//      3 * ( 1 - g^2 )               1 + cos^2
+// F = ----------------- * -------------------------------
+//      <4pi> * 2 * ( 2 + g^2 )     ( 1 + g^2 - 2 * g * cos )^(3/2)
+float HenyeyGreenstein(float cos, float anisotropy)
+{
+    float g = anisotropy;
+    float gg = g * g;
+
+    float a = 3 * (1 - gg);
+    float b = 8 * M_PI * (2 + gg);
+    float c = 1 + cos * cos;
+    float d = pow((1 + gg - 2 * g * cos), 3 / 2);
+
+    return a / b * c / d;
 }
 
 #endif
