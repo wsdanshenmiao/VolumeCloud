@@ -65,7 +65,7 @@ float SampleDensity(float3 currPos, out float absorptivity)
     float3 cloudCenter = (_CloudBoxMin + _CloudBoxMax).xyz * 0.5;
     float3 cloudSize = (_CloudBoxMax - _CloudBoxMin).xyz;
 
-    float3 uvw = currPos * 0.0001;
+    float3 uvw = currPos * 0.0001 + _Time.y * 0.001;
 
     // 边缘的衰减
     float edgeFadeDistance = 100;
@@ -99,6 +99,7 @@ float SampleDensity(float3 currPos, out float absorptivity)
     float densityFac = densityButton * densityTop * 2;
 
     density *= roundFac * densityFac * edgeFade;
+    density += _DensityOffset * 0.01;
 
     if(density > 0) {
         // 为体积云添加天气属性
@@ -107,7 +108,7 @@ float SampleDensity(float3 currPos, out float absorptivity)
         float4 weatherTex = SAMPLE_TEXTURE2D(_WeatherNoiceTex, sampler_WeatherNoiceTex, weatherUV);
         // 云层覆盖率
         float cloudCoverage = weatherTex.r;
-        // density = Remap(density, cloudCoverage, 1, 0, 1);
+        density = Remap(density, cloudCoverage, 1, 0, 1);
         absorptivity = weatherTex.g;
         density *= cloudCoverage;
 

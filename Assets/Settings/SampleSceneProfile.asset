@@ -49,34 +49,37 @@ MonoBehaviour:
     m_Value: 1
   m_ShapeMarchingCount:
     m_OverrideState: 1
-    m_Value: 61
+    m_Value: 10
   m_LightMarchingCount:
     m_OverrideState: 1
-    m_Value: 10
+    m_Value: 5
   m_DensityOffset:
     m_OverrideState: 1
     m_Value: 1
   m_SampleShapeScale:
     m_OverrideState: 1
-    m_Value: 2.68
+    m_Value: 1.91
   m_SampleDetailScale:
     m_OverrideState: 1
-    m_Value: 3.99
+    m_Value: 7.14
   m_DensityMultiplier:
     m_OverrideState: 1
     m_Value: 1
+  m_CloudScatter:
+    m_OverrideState: 1
+    m_Value: 0.2
   m_DensityThreshold:
     m_OverrideState: 1
-    m_Value: 2
+    m_Value: 0
   m_DarknessThreshold:
     m_OverrideState: 1
     m_Value: 0
   m_ExtinctionCoefficient:
     m_OverrideState: 1
-    m_Value: 0.911
+    m_Value: 0.6
   m_DetailScale:
     m_OverrideState: 1
-    m_Value: 3.61
+    m_Value: 3.69
   m_CloudBoxCenter:
     m_OverrideState: 1
     m_Value: {x: 0, y: 1500, z: 0}
@@ -94,7 +97,7 @@ MonoBehaviour:
     m_Value: {x: 0.64, y: 0.25, z: 0.125}
   m_ShapeWeights:
     m_OverrideState: 1
-    m_Value: {x: 0.64, y: 0.25, z: 0.125}
+    m_Value: {x: 0.98, y: 0.87, z: 0.96}
   m_ShapeNoiceTex:
     m_OverrideState: 1
     m_Value: {fileID: 11700000, guid: 70c2adccd53fd45468d11570134863c2, type: 2}
