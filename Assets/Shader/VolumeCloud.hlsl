@@ -13,7 +13,12 @@
 	Versions:		1.0
 	Creation time:	2025.1.10
 	Finish time:	2025.2.1
-	Abstract:       优化rayMarching，采样密度多次为 0 时进入大步进
+	Abstract:       1. 优化rayMarching
+                    优化思路：
+                        由于采样密度时会弱化底部和顶部，因此开始步进时采用大步进，遇到密度非 0 时切换到普通步进.
+                        后续步进累计密度连续为 0 的采样次数，若达到阈值则进入大步进.
+                        若遇到密度非 0 时则切换到普通步进，并回退一步，防止漏采样.
+
                     优化前的步进：
                     for(int i = 0; i < _ShapeMarchingCount; currPos += rayStep, ++i){
                         // 计算当前点的密度
@@ -30,6 +35,9 @@
                             if(transmittance < 0.01) break;
                         }
                     }
+
+
+                    2. 引入蓝噪声,将其作用在raymarching起始位置上，消除步进带来的层次感
 ****************************************************************************************/
 
 #ifndef __VOLUMECLOUD__HLSL__
@@ -42,6 +50,7 @@
 TEXTURE2D(_BackgroundTex);
 TEXTURE2D(_CameraDepthTexture);
 TEXTURE2D(_WeatherNoiceTex);
+TEXTURE2D(_BlueNoiceTex);
 
 TEXTURE3D(_ShapeNoiceTex);
 TEXTURE3D(_DetailNoiceTex);
@@ -49,6 +58,7 @@ TEXTURE3D(_DetailNoiceTex);
 SAMPLER(sampler_BackgroundTex);
 SAMPLER(sampler_CameraDepthTexture);
 SAMPLER(sampler_WeatherNoiceTex);
+SAMPLER(sampler_BlueNoiceTex);
 SAMPLER(sampler_ShapeNoiceTex);
 SAMPLER(sampler_DetailNoiceTex);
 
@@ -73,6 +83,8 @@ float _DarknessThreshold;
 
 float _ExtinctionCoefficient;
 float _CloudScatter;
+
+float _BlueNoiceScale;
 
 float _DensityOffset;
 float _DetailScale;
@@ -168,7 +180,7 @@ float SampleDensity(float3 currPos, bool enableDetail, out float absorptivity)
 float LightMarching(float3 currPos, float3 lightDir)
 {
     // 总密度
-    float3 sumDensity = 0;
+    float sumDensity = 0;
     float transmittance = 1;
     float absorptivity = 1;
 
@@ -193,12 +205,12 @@ float LightMarching(float3 currPos, float3 lightDir)
 }
 
 // 从相机出发，沿观察方向进行raymarching
-float3 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, out float transmittance)
+float4 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, float blueNoice)
 {
     // 总密度
     float sumDensity = 0;
     // 透光率
-    transmittance = 1;
+    float transmittance = 1;
     // 光照强度
     float3 lightIntensity = 0;
     float absorptivity = 1;
@@ -214,7 +226,7 @@ float3 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, o
     float3 insertInfo = RayInsertBox(_CloudBoxMin.xyz, _CloudBoxMax.xyz, currPos, invDir);
 
     // 未相交直接返回 0 光照强度
-    if(insertInfo.x == 0) return lightIntensity;
+    if(insertInfo.x == 0) return float4(lightIntensity, transmittance);
     
     float enterPos = max(0, insertInfo.y);
     // 物体到相机的距离
@@ -225,13 +237,11 @@ float3 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, o
     float stepSize = marchingLimit / _ShapeMarchingCount;
     float3 rayStep = rayDir * stepSize;
 
-    /*
-    rayMarching优化
-    优化思路：
-        由于采样密度时会弱化底部和顶部，因此开始步进时采用大步进，遇到密度非 0 时切换到普通步进.
-        后续步进累计密度连续为 0 的采样次数，若达到阈值则进入大步进.
-        若遇到密度非 0 时则切换到普通步进，并回退一步，防止漏采样.
-    */
+    // 蓝噪声优化
+    float3 startOffset = (blueNoice - 0.5) * 2 * rayStep;
+    currPos += startOffset * _BlueNoiceScale;
+
+    // rayMarching优化
     float densityTest = 0;
     float preDensity = 0;
     int zeroDensityCount = 0;
@@ -280,7 +290,7 @@ float3 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, o
         }
     }
 
-    return lightIntensity;
+    return float4(lightIntensity, transmittance);
 }
 
 
@@ -320,18 +330,19 @@ float4 fragVolumeCloud(v2f i) : SV_Target
     Light mainLight = GetMainLight();
     float3 lightDir = normalize(mainLight.direction);
 
+    float blueNoiceOffset = SAMPLE_TEXTURE2D(_BlueNoiceTex, sampler_BlueNoiceTex, i.uv).r;
+
     float3 cameraPosW = GetCameraPositionWS();
-    float transmittance = 1;
     Ray ray;
     ray.startPos = cameraPosW;
     ray.dir = normalize(posW.xyz - cameraPosW);
-    float3 cloudCol = VolumeCloudRaymarching(ray, lightDir, linearDepth, transmittance);
-    cloudCol *= mainLight.color;
+    float4 cloud = VolumeCloudRaymarching(ray, lightDir, linearDepth, blueNoiceOffset);
+    float3 cloudCol = cloud.rgb * mainLight.color;;
 
     // 获取背景颜色
     float4 preColor = SAMPLE_TEXTURE2D(_BackgroundTex, sampler_BackgroundTex, i.uv);
 
-    return float4(preColor.rgb * transmittance + cloudCol, preColor.a);
+    return float4(preColor.rgb * cloud.a + cloudCol, preColor.a);
 }
 
 

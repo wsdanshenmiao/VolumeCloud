@@ -61,6 +61,7 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
         m_VolumeCloudMat.SetTexture("_BackgroundTex", m_RenderTarget);
         m_VolumeCloudMat.SetTexture("_ShapeNoiceTex", m_VolumeCloudParamer.m_ShapeNoiceTex.value);
         m_VolumeCloudMat.SetTexture("_DetailNoiceTex", m_VolumeCloudParamer.m_DetailNoiceTex.value);
+        m_VolumeCloudMat.SetTexture("_BlueNoiceTex", m_VolumeCloudParamer.m_BlueNoiceTex.value);
 
         m_VolumeCloudMat.SetInt("_ShapeMarchingCount", m_VolumeCloudParamer.m_ShapeMarchingCount.value);
         m_VolumeCloudMat.SetInt("_LightMarchingCount", m_VolumeCloudParamer.m_LightMarchingCount.value);
@@ -75,6 +76,7 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
         m_VolumeCloudMat.SetFloat("_DensityMultiplier", m_VolumeCloudParamer.m_DensityMultiplier.value);
         m_VolumeCloudMat.SetFloat("_DetailScale", m_VolumeCloudParamer.m_DetailScale.value);
         m_VolumeCloudMat.SetFloat("_CloudScatter", m_VolumeCloudParamer.m_CloudScatter.value);
+        m_VolumeCloudMat.SetFloat("_BlueNoiceScale", m_VolumeCloudParamer.m_BlueNoiceScale.value);
 
         m_VolumeCloudMat.SetVector("_SampleShapeOffset", m_VolumeCloudParamer.m_SampleShapeOffset.value);
         m_VolumeCloudMat.SetVector("_SampleDetailOffset", m_VolumeCloudParamer.m_SampleDetailOffset.value);

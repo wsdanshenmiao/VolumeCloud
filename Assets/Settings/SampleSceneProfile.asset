@@ -49,7 +49,7 @@ MonoBehaviour:
     m_Value: 1
   m_ShapeMarchingCount:
     m_OverrideState: 1
-    m_Value: 200
+    m_Value: 72
   m_LightMarchingCount:
     m_OverrideState: 1
     m_Value: 8
@@ -83,6 +83,9 @@ MonoBehaviour:
   m_DetailScale:
     m_OverrideState: 1
     m_Value: 1
+  m_BlueNoiceScale:
+    m_OverrideState: 1
+    m_Value: 1
   m_CloudBoxCenter:
     m_OverrideState: 1
     m_Value: {x: 0, y: 1500, z: 0}
@@ -110,6 +113,9 @@ MonoBehaviour:
   m_WeatherNoiceTex:
     m_OverrideState: 1
     m_Value: {fileID: 2800000, guid: 2982bac01a8e15e4d84776fe042cdb98, type: 3}
+  m_BlueNoiceTex:
+    m_OverrideState: 1
+    m_Value: {fileID: 2800000, guid: 5bb92e256168a454aa369217d922e1b3, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0

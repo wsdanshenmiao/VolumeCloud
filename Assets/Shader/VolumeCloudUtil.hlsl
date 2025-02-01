@@ -1,3 +1,12 @@
+/****************************************************************************************
+    File name:      VolumeCloud.hlsl
+	Author:			danshenmiao
+	Versions:		1.0
+	Creation time:	2025.1.10
+	Finish time:	2025.2.1
+	Abstract:       辅助函数及结构体
+****************************************************************************************/
+
 #ifndef __VOLUMECLOUDUTIL__HLSL__
 #define __VOLUMECLOUDUTIL__HLSL__
 

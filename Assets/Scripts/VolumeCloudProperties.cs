@@ -33,6 +33,8 @@ public class VolumeCloudParamer : VolumeComponent, IPostProcessComponent
     public ClampedFloatParameter m_ExtinctionCoefficient = new ClampedFloatParameter(1, 0, 1);
     [Tooltip("细节影响权重")]
     public ClampedFloatParameter m_DetailScale = new ClampedFloatParameter(1, 0, 100);
+    [Tooltip("蓝噪声影响权重")]
+    public ClampedFloatParameter m_BlueNoiceScale = new ClampedFloatParameter(1, 0, 10);
 
     [Tooltip("体积云中心")]
     public Vector3Parameter m_CloudBoxCenter = new Vector3Parameter(Vector3.zero);
@@ -55,6 +57,8 @@ public class VolumeCloudParamer : VolumeComponent, IPostProcessComponent
     public Texture3DParameter m_DetailNoiceTex = new Texture3DParameter(null);
     [Tooltip("控制天气的噪声")]
     public Texture2DParameter m_WeatherNoiceTex = new Texture2DParameter(null);
+    [Tooltip("蓝噪声")]
+    public Texture2DParameter m_BlueNoiceTex = new Texture2DParameter(null);
 
     public bool IsActive() => true;
     public bool IsTileCompatible() => false;

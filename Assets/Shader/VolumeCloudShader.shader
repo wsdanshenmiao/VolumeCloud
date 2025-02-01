@@ -7,6 +7,10 @@ Shader "DSMRender/VolumeCloud"
 
         Pass
         {
+            Name "VolumeCloud"
+
+            Cull Off ZWrite Off ZTest Always
+
             HLSLPROGRAM
             #include "VolumeCloud.hlsl"
             #pragma vertex vertVolumeCloud
