@@ -11,6 +11,8 @@ public class VolumeCloudParamer : VolumeComponent, IPostProcessComponent
     public ClampedIntParameter m_ShapeMarchingCount = new ClampedIntParameter(50, 10, 200);
     [Tooltip("采样光照的最大步进次数")]
     public ClampedIntParameter m_LightMarchingCount = new ClampedIntParameter(20, 5, 50);
+    [Tooltip("进入大步进的阈值")]
+    public ClampedIntParameter m_LargeStepThreshold = new ClampedIntParameter(6, 4, 10);
 
     [Tooltip("密度偏移")]
     public FloatParameter m_DensityOffset = new FloatParameter(0);

@@ -1,3 +1,37 @@
+/****************************************************************************************
+    File name:      VolumeCloud.hlsl
+	Author:			danshenmiao
+	Versions:		1.0
+	Creation time:	2025.1.10
+	Finish time:	2025.2.1
+	Abstract:       实现基本的体积云
+****************************************************************************************/
+
+/****************************************************************************************
+    File name:      VolumeCloud.hlsl
+	Author:			danshenmiao
+	Versions:		1.0
+	Creation time:	2025.1.10
+	Finish time:	2025.2.1
+	Abstract:       优化rayMarching，采样密度多次为 0 时进入大步进
+                    优化前的步进：
+                    for(int i = 0; i < _ShapeMarchingCount; currPos += rayStep, ++i){
+                        // 计算当前点的密度
+                        float density = SampleDensity(currPos, true, absorptivity) * stepSize;
+
+                        if(density > 0){
+                            float lightDensity = LightMarching(currPos, lightDir);
+                            lightIntensity += density * transmittance * lightDensity * phase;
+                            // 计算吸光率
+                            float absorbance = absorptivity * _ExtinctionCoefficient * density;
+                            transmittance *= BeerLambert(absorbance);
+                            sumDensity += density;
+                            
+                            if(transmittance < 0.01) break;
+                        }
+                    }
+****************************************************************************************/
+
 #ifndef __VOLUMECLOUD__HLSL__
 #define __VOLUMECLOUD__HLSL__
 
@@ -33,6 +67,7 @@ float _SampleDetailScale;
 
 int _ShapeMarchingCount;
 int _LightMarchingCount;
+int _LargeStepThreshold;
 
 float _DarknessThreshold;
 
@@ -58,7 +93,7 @@ struct v2f
 };
 
 
-float SampleDensity(float3 currPos, out float absorptivity)
+float SampleDensity(float3 currPos, bool enableDetail, out float absorptivity)
 {
     float density = 0;
     // 复原体积云的范围信息
@@ -112,14 +147,14 @@ float SampleDensity(float3 currPos, out float absorptivity)
         absorptivity = weatherTex.g;
         density *= cloudCoverage;
 
-        if(density > 0){
+        if(density > 0 && enableDetail){
             // 为云添加细节
             float3 sampleDetailUV = uvw * _SampleDetailScale + _SampleDetailOffset.xyz;
             // 获取高频的 Worley 噪声
             float3 detailNoice = SAMPLE_TEXTURE3D(_DetailNoiceTex, sampler_DetailNoiceTex, sampleDetailUV).rgb;
             // 计算 Worley 噪声的FBM
             float detailFBM = dot(detailNoice, normalize(_DetailWeights.xyz));
-            float detailErode = (1 - detailFBM) * 0.001 * _DetailScale;
+            float detailErode = (1 - detailFBM) * 0.01 * _DetailScale;
             density -= detailErode;
         }
     } 
@@ -145,7 +180,7 @@ float LightMarching(float3 currPos, float3 lightDir)
         float3 rayStep = lightDir * stepSize;
         [loop]
         for(int i = 0; i < _LightMarchingCount; currPos += rayStep, ++i){
-            float density = SampleDensity(currPos, absorptivity) * stepSize;
+            float density = SampleDensity(currPos, true, absorptivity) * stepSize;
             sumDensity += density;
         }
     }
@@ -171,28 +206,55 @@ float3 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, o
     float3 currPos = viewRay.startPos;
     float3 rayDir = viewRay.dir;
 
-    float3 invDir = 1 / rayDir;
-
     float cos = dot(rayDir, lightDir);
     float phase = HenyeyGreenstein(cos, _CloudScatter);
 
     // 相机视线与包围盒相交
+    float3 invDir = 1 / rayDir;
     float3 insertInfo = RayInsertBox(_CloudBoxMin.xyz, _CloudBoxMax.xyz, currPos, invDir);
-    [flatten]
-    if(insertInfo.x != 0){
-        float enterPos = max(0, insertInfo.y);
-        // 物体到相机的距离
-        currPos += rayDir * enterPos;
-        // 考虑物体遮挡情况，选取最小距离
-        float marchingLimit = min(linearDepth, insertInfo.z) - enterPos;
 
-        float stepSize = marchingLimit / _ShapeMarchingCount;
-        float3 rayStep = rayDir * stepSize;
+    // 未相交直接返回 0 光照强度
+    if(insertInfo.x == 0) return lightIntensity;
+    
+    float enterPos = max(0, insertInfo.y);
+    // 物体到相机的距离
+    currPos += rayDir * enterPos;
+    // 考虑物体遮挡情况，选取最小距离
+    float marchingLimit = min(linearDepth, insertInfo.z) - enterPos;
 
-        [loop]
-        for(int i = 0; i < _ShapeMarchingCount; currPos += rayStep, ++i){
+    float stepSize = marchingLimit / _ShapeMarchingCount;
+    float3 rayStep = rayDir * stepSize;
+
+    /*
+    rayMarching优化
+    优化思路：
+        由于采样密度时会弱化底部和顶部，因此开始步进时采用大步进，遇到密度非 0 时切换到普通步进.
+        后续步进累计密度连续为 0 的采样次数，若达到阈值则进入大步进.
+        若遇到密度非 0 时则切换到普通步进，并回退一步，防止漏采样.
+    */
+    float densityTest = 0;
+    float preDensity = 0;
+    int zeroDensityCount = 0;
+    [loop]
+    for(int i = 0; i < _ShapeMarchingCount; ++i){
+        currPos += rayStep;
+
+        // 检测是否进入大步进, 第一次进入大步进
+        if(densityTest <= 0){   // 大步进
+            densityTest = SampleDensity(currPos, false, absorptivity);
+
+            if(densityTest > 0){
+                currPos -= rayStep; // 回退一步，防止漏采样
+                --i;
+            }
+            else{
+                currPos += rayStep; // 额外步进一次
+                ++i;
+            }
+        }
+        else{   // 普通步进
             // 计算当前点的密度
-            float density = SampleDensity(currPos, absorptivity) * stepSize;
+            float density = SampleDensity(currPos, true, absorptivity) * stepSize;
 
             if(density > 0){
                 float lightDensity = LightMarching(currPos, lightDir);
@@ -204,6 +266,17 @@ float3 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, o
                 
                 if(transmittance < 0.01) break;
             }
+            else if(preDensity <= 0){
+                ++zeroDensityCount;
+            }
+
+            // 0 密度次数达到阈值清空累计次数，进入大步进
+            if(zeroDensityCount >= _LargeStepThreshold){
+                zeroDensityCount = 0;
+                densityTest = 0;
+            }
+
+            preDensity = density;
         }
     }
 

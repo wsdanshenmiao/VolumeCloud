@@ -64,6 +64,7 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
 
         m_VolumeCloudMat.SetInt("_ShapeMarchingCount", m_VolumeCloudParamer.m_ShapeMarchingCount.value);
         m_VolumeCloudMat.SetInt("_LightMarchingCount", m_VolumeCloudParamer.m_LightMarchingCount.value);
+        m_VolumeCloudMat.SetInt("_LargeStepThreshold", m_VolumeCloudParamer.m_LargeStepThreshold.value);
         
         m_VolumeCloudMat.SetFloat("_SampleShapeScale", m_VolumeCloudParamer.m_SampleShapeScale.value);
         m_VolumeCloudMat.SetFloat("_SampleDetailScale", m_VolumeCloudParamer.m_SampleDetailScale.value);
