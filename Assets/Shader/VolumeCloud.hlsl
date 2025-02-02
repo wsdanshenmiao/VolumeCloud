@@ -11,8 +11,8 @@
     File name:      VolumeCloud.hlsl
 	Author:			danshenmiao
 	Versions:		1.0
-	Creation time:	2025.1.10
-	Finish time:	2025.2.1
+	Creation time:	2025.2.1
+	Finish time:	2025.2.2
 	Abstract:       1. 优化rayMarching
                     优化思路：
                         由于采样密度时会弱化底部和顶部，因此开始步进时采用大步进，遇到密度非 0 时切换到普通步进.

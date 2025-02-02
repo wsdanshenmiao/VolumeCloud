@@ -13,6 +13,7 @@ public class roution : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.Rotate(new Vector3(0,1,0), Time.deltaTime * 10);
+        transform.Rotate(new Vector3(0,1,0), Time.deltaTime);
+        transform.position = new Vector3(transform.position.x + Time.deltaTime * 1000, transform.position.y, transform.position.z);
     }
 }
