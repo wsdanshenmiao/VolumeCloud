@@ -24,6 +24,8 @@ public class VolumeCloudParamer : VolumeComponent, IPostProcessComponent
     public FloatParameter m_DensityMultiplier = new FloatParameter(1);
     [Tooltip("散射系数")]
     public FloatParameter m_CloudScatter = new FloatParameter(1);
+    [Tooltip("风的速度")]
+    public FloatParameter m_WindSpeed = new FloatParameter(1);
 
     [Tooltip("密度阈值")]
     public ClampedFloatParameter m_DensityThreshold = new ClampedFloatParameter(.2f, -10, 10);
@@ -46,10 +48,10 @@ public class VolumeCloudParamer : VolumeComponent, IPostProcessComponent
     public Vector3Parameter m_SampleDetailOffset = new Vector3Parameter(Vector3.zero);
     [Tooltip("细节控制权重")]
     public Vector3Parameter m_DetailWeights = new Vector3Parameter(Vector3.one);
-
-
     [Tooltip("形状控制权重")]
     public Vector3Parameter m_ShapeWeights = new Vector3Parameter(Vector3.one);
+    [Tooltip("风的方向")]
+    public Vector3Parameter m_WindDirection = new Vector3Parameter(Vector3.zero);
 
     [Tooltip("形状噪声")]
     public Texture3DParameter m_ShapeNoiceTex = new Texture3DParameter(null);

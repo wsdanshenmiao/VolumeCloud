@@ -47,7 +47,7 @@
 
 #include "VolumeCloudUtil.hlsl"
 
-TEXTURE2D(_BackgroundTex);
+TEXTURE2D(_BackTex);
 TEXTURE2D(_CameraDepthTexture);
 TEXTURE2D(_WeatherNoiceTex);
 TEXTURE2D(_BlueNoiceTex);
@@ -55,7 +55,7 @@ TEXTURE2D(_BlueNoiceTex);
 TEXTURE3D(_ShapeNoiceTex);
 TEXTURE3D(_DetailNoiceTex);
 
-SAMPLER(sampler_BackgroundTex);
+SAMPLER(sampler_BackTex);
 SAMPLER(sampler_CameraDepthTexture);
 SAMPLER(sampler_WeatherNoiceTex);
 SAMPLER(sampler_BlueNoiceTex);
@@ -86,10 +86,17 @@ float _CloudScatter;
 
 float _BlueNoiceScale;
 
+float4 _WindDirection;
+float _WindSpeed;
+
 float _DensityOffset;
 float _DetailScale;
 float _DensityThreshold;
 float _DensityMultiplier;
+
+int _TextureWidth;
+int _TextureHeight;
+int _CurrFrameCount;
 CBUFFER_END
 
 struct appdata
@@ -112,14 +119,13 @@ float SampleDensity(float3 currPos, bool enableDetail, out float absorptivity)
     float3 cloudCenter = (_CloudBoxMin + _CloudBoxMax).xyz * 0.5;
     float3 cloudSize = (_CloudBoxMax - _CloudBoxMin).xyz;
 
-    float3 uvw = currPos * 0.0001 + _Time.y * 0.001;
+    float3 uvw = currPos * 0.0001 + _WindDirection.xyz * _WindSpeed * _Time.y * 0.001;
 
     // 边缘的衰减
-    float edgeFadeDistance = 100;
+    const float edgeFadeDistance = 50;
     float distanceX = min(edgeFadeDistance, min(_CloudBoxMax.x - currPos.x, currPos.x - _CloudBoxMin.x));
     float distanceZ = min(edgeFadeDistance, min(_CloudBoxMax.z - currPos.z, currPos.z - _CloudBoxMin.z));
     float edgeFade = min(distanceX, distanceZ) / edgeFadeDistance;
-
 
     // 获取体积云的基本形状
     float3 sampleShapeUV = uvw * _SampleShapeScale + _SampleShapeOffset.xyz;
@@ -267,6 +273,8 @@ float4 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, f
             float density = SampleDensity(currPos, true, absorptivity) * stepSize;
 
             if(density > 0){
+                zeroDensityCount = 0;
+                
                 float lightDensity = LightMarching(currPos, lightDir);
                 lightIntensity += density * transmittance * lightDensity * phase;
                 // 计算吸光率
@@ -307,6 +315,21 @@ v2f vertVolumeCloud(appdata v)
 
 float4 fragVolumeCloud(v2f i) : SV_Target
 {
+    // 获取背景颜色
+    float4 preColor = SAMPLE_TEXTURE2D(_BackTex, sampler_BackTex, i.uv);
+
+#ifndef _FrameBlockOFF
+    #ifdef _FrameBlock2X2
+    int blockCount = 2;
+    #elif _FrameBlock4X4
+    int blockCount = 4;
+    #endif
+
+    int index = GetPixelIndex(i.uv, _TextureWidth, _TextureHeight, blockCount);
+
+    if(index != _CurrFrameCount % (blockCount * blockCount)) return preColor;
+#endif
+
     // 获取深度
     float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture, i.uv).x;
     float linearDepth = LinearEyeDepth(depth, _ZBufferParams);
@@ -337,12 +360,9 @@ float4 fragVolumeCloud(v2f i) : SV_Target
     ray.startPos = cameraPosW;
     ray.dir = normalize(posW.xyz - cameraPosW);
     float4 cloud = VolumeCloudRaymarching(ray, lightDir, linearDepth, blueNoiceOffset);
-    float3 cloudCol = cloud.rgb * mainLight.color;;
+    cloud.rgb *= mainLight.color;
 
-    // 获取背景颜色
-    float4 preColor = SAMPLE_TEXTURE2D(_BackgroundTex, sampler_BackgroundTex, i.uv);
-
-    return float4(preColor.rgb * cloud.a + cloudCol, preColor.a);
+    return float4(preColor.rgb * cloud.a + cloud.rgb, preColor.a);
 }
 
 

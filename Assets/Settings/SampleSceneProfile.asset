@@ -61,7 +61,7 @@ MonoBehaviour:
     m_Value: 1
   m_SampleShapeScale:
     m_OverrideState: 1
-    m_Value: 1.91
+    m_Value: 1.26
   m_SampleDetailScale:
     m_OverrideState: 1
     m_Value: 7.14
@@ -70,7 +70,10 @@ MonoBehaviour:
     m_Value: 1
   m_CloudScatter:
     m_OverrideState: 1
-    m_Value: 0.2
+    m_Value: 0.4
+  m_WindSpeed:
+    m_OverrideState: 1
+    m_Value: 0
   m_DensityThreshold:
     m_OverrideState: 1
     m_Value: 0
@@ -85,13 +88,13 @@ MonoBehaviour:
     m_Value: 1
   m_BlueNoiceScale:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 4
   m_CloudBoxCenter:
     m_OverrideState: 1
     m_Value: {x: 0, y: 1500, z: 0}
   m_CloudBoxSize:
     m_OverrideState: 1
-    m_Value: {x: 8000, y: 1000, z: 8000}
+    m_Value: {x: 10000, y: 1000, z: 10000}
   m_SampleShapeOffset:
     m_OverrideState: 1
     m_Value: {x: 0, y: 0, z: 0}
@@ -104,6 +107,9 @@ MonoBehaviour:
   m_ShapeWeights:
     m_OverrideState: 1
     m_Value: {x: 0.98, y: 0.87, z: 0.96}
+  m_WindDirection:
+    m_OverrideState: 1
+    m_Value: {x: 1, y: 1, z: 1}
   m_ShapeNoiceTex:
     m_OverrideState: 1
     m_Value: {fileID: 11700000, guid: 70c2adccd53fd45468d11570134863c2, type: 2}

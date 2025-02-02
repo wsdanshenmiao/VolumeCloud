@@ -9,12 +9,12 @@ Shader "DSMRender/VolumeCloud"
         {
             Name "VolumeCloud"
 
-            Cull Off ZWrite Off ZTest Always
 
             HLSLPROGRAM
             #include "VolumeCloud.hlsl"
             #pragma vertex vertVolumeCloud
             #pragma fragment fragVolumeCloud
+            #pragma multi_compile _FrameBlockOFF _FrameBlock2X2 _FrameBlock4X4
             ENDHLSL
         }
     }

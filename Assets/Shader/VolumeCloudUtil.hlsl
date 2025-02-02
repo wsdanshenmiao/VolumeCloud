@@ -89,4 +89,32 @@ float HenyeyGreenstein(float cos, float anisotropy)
     return a / b * c / d;
 }
 
+// 计算当前的像素在像素块中的索引,按对角线十字进行计算
+int GetPixelIndex(float2 uv, int width, int height, int blockCount)
+{
+    int frameBlock2X2[] = {
+        0, 2, 3, 1
+    };
+
+    int frameBlock4X4[] = {
+        0, 8, 2, 10,
+        12, 4, 14, 6,
+        3, 11, 1, 9,
+        15, 7, 13, 5
+    };
+
+    int x = floor(uv.x * width) % blockCount;
+    int y = floor(uv.y * height) % blockCount;
+    int index = x + y * blockCount;
+
+    if(blockCount == 2){
+        index = frameBlock2X2[index];
+    }
+    else if(blockCount == 4){
+        index = frameBlock4X4[index];
+    }
+
+    return index;
+}
+
 #endif

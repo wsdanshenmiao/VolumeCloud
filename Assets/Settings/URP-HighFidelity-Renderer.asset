@@ -13,9 +13,12 @@ MonoBehaviour:
   m_Name: VolumeCloud
   m_EditorClassIdentifier: 
   m_Active: 1
-  m_EnableInEdit: 0
-  m_RenderPassEvent: 550
-  m_VolumeCloudShader: {fileID: 4800000, guid: d24a24ce27e78e74aa54892126f9821a, type: 3}
+  m_VolumeCloudSetting:
+    m_EnableInEdit: 0
+    m_RenderPassEvent: 550
+    m_VolumeCloudShader: {fileID: 4800000, guid: d24a24ce27e78e74aa54892126f9821a,
+      type: 3}
+    m_FrameBlock: 4
 --- !u!114 &-1878332245247344467
 MonoBehaviour:
   m_ObjectHideFlags: 0
