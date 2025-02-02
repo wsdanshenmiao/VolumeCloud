@@ -38,6 +38,8 @@
 
 
                     2. 引入蓝噪声,将其作用在raymarching起始位置上，消除步进带来的层次感
+
+                    3. 添加分帧绘制，提供不分帧、4帧、16帧三种
 ****************************************************************************************/
 
 #ifndef __VOLUMECLOUD__HLSL__
@@ -47,7 +49,7 @@
 
 #include "VolumeCloudUtil.hlsl"
 
-TEXTURE2D(_BackTex);
+TEXTURE2D(_CloudBackTex);
 TEXTURE2D(_CameraDepthTexture);
 TEXTURE2D(_WeatherNoiceTex);
 TEXTURE2D(_BlueNoiceTex);
@@ -55,7 +57,7 @@ TEXTURE2D(_BlueNoiceTex);
 TEXTURE3D(_ShapeNoiceTex);
 TEXTURE3D(_DetailNoiceTex);
 
-SAMPLER(sampler_BackTex);
+SAMPLER(sampler_CloudBackTex);
 SAMPLER(sampler_CameraDepthTexture);
 SAMPLER(sampler_WeatherNoiceTex);
 SAMPLER(sampler_BlueNoiceTex);
@@ -315,10 +317,9 @@ v2f vertVolumeCloud(appdata v)
 
 float4 fragVolumeCloud(v2f i) : SV_Target
 {
-    // 获取背景颜色
-    float4 preColor = SAMPLE_TEXTURE2D(_BackTex, sampler_BackTex, i.uv);
-
 #ifndef _FrameBlockOFF
+    // 获取背景颜色
+    float4 preColor = SAMPLE_TEXTURE2D(_CloudBackTex, sampler_CloudBackTex, i.uv);
     #ifdef _FrameBlock2X2
     int blockCount = 2;
     #elif _FrameBlock4X4
@@ -362,7 +363,8 @@ float4 fragVolumeCloud(v2f i) : SV_Target
     float4 cloud = VolumeCloudRaymarching(ray, lightDir, linearDepth, blueNoiceOffset);
     cloud.rgb *= mainLight.color;
 
-    return float4(preColor.rgb * cloud.a + cloud.rgb, preColor.a);
+    //return float4(preColor.rgb * cloud.a + cloud.rgb, preColor.a);
+    return cloud;
 }
 
 

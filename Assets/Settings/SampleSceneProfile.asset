@@ -49,7 +49,7 @@ MonoBehaviour:
     m_Value: 1
   m_ShapeMarchingCount:
     m_OverrideState: 1
-    m_Value: 72
+    m_Value: 50
   m_LightMarchingCount:
     m_OverrideState: 1
     m_Value: 8
@@ -73,7 +73,7 @@ MonoBehaviour:
     m_Value: 0.4
   m_WindSpeed:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 1
   m_DensityThreshold:
     m_OverrideState: 1
     m_Value: 0

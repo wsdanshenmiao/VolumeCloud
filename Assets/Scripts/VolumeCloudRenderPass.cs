@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -12,6 +9,7 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
     private RTHandle m_RenderTarget;
     private ProfilingSampler m_ProfilingSampler = new ProfilingSampler("VolumeCloud");
     private FrameBlock m_FrameBlock;
+    public RenderTexture[] m_CloudTex;
 
     private int m_FrameCount = 0;
 
@@ -27,7 +25,7 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
 
         this.renderPassEvent = setting.m_RenderPassEvent;
         this.m_FrameBlock = setting.m_FrameBlock;
-        m_VolumeCloudMat = CoreUtils.CreateEngineMaterial(setting.m_VolumeCloudShader);
+        this.m_VolumeCloudMat = setting.m_VolumeCloudMat;
     }
 
     public void SetUp(RTHandle renderTarget)
@@ -82,7 +80,6 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
             m_VolumeCloudMat.EnableKeyword("_FrameBlock4X4");
         }
 
-        m_VolumeCloudMat.SetTexture("_BackTex", m_RenderTarget);
         m_VolumeCloudMat.SetTexture("_ShapeNoiceTex", m_VolumeCloudParamer.m_ShapeNoiceTex.value);
         m_VolumeCloudMat.SetTexture("_DetailNoiceTex", m_VolumeCloudParamer.m_DetailNoiceTex.value);
         m_VolumeCloudMat.SetTexture("_BlueNoiceTex", m_VolumeCloudParamer.m_BlueNoiceTex.value);
@@ -114,7 +111,25 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
         m_VolumeCloudMat.SetVector("_CloudBoxMax", cloudBoxMax);
         m_VolumeCloudMat.SetVector("_WindDirection", m_VolumeCloudParamer.m_WindDirection.value.normalized);
 
-        cmd.Blit(m_RenderTarget, m_RenderTarget, m_VolumeCloudMat, 0);
+        if(m_FrameBlock == FrameBlock._OFF){
+            RenderTexture tmpTex = RenderTexture.GetTemporary(textureWidth, textureHeight);
+
+            cmd.Blit(m_RenderTarget, tmpTex, m_VolumeCloudMat, 0);
+            m_VolumeCloudMat.SetTexture("_BackTex", m_RenderTarget);
+            m_VolumeCloudMat.SetTexture("_BlendCloudTex", tmpTex);
+            cmd.Blit(tmpTex, m_RenderTarget, m_VolumeCloudMat, 1);
+
+            RenderTexture.ReleaseTemporary(tmpTex);
+        }
+        else{
+            int index1 = m_FrameCount % 2;
+            int index2 = (m_FrameCount + 1) % 2;
+            m_VolumeCloudMat.SetTexture("_CloudBackTex", m_CloudTex[index1]);
+            cmd.Blit(m_CloudTex[index1], m_CloudTex[index2], m_VolumeCloudMat, 0);
+            m_VolumeCloudMat.SetTexture("_BackTex", m_RenderTarget);
+            m_VolumeCloudMat.SetTexture("_BlendCloudTex", m_CloudTex[index2]);
+            cmd.Blit(m_CloudTex[index2], m_RenderTarget, m_VolumeCloudMat, 1);
+        }
 
         ++m_FrameCount;
     }
