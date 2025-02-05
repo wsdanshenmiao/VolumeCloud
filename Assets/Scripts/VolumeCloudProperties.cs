@@ -62,6 +62,6 @@ public class VolumeCloudParamer : VolumeComponent, IPostProcessComponent
     [Tooltip("蓝噪声")]
     public Texture2DParameter m_BlueNoiceTex = new Texture2DParameter(null);
 
-    public bool IsActive() => true;
+    public bool IsActive() => m_ShapeMarchingCount.value > 0;
     public bool IsTileCompatible() => false;
 }

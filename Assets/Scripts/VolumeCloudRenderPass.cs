@@ -9,7 +9,7 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
     private RTHandle m_RenderTarget;
     private ProfilingSampler m_ProfilingSampler = new ProfilingSampler("VolumeCloud");
     private FrameBlock m_FrameBlock;
-    public RenderTexture[] m_CloudTex;
+    private RenderTexture[] m_CloudTex;
 
     private int m_FrameCount = 0;
 
@@ -33,6 +33,11 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
         m_RenderTarget = renderTarget;
     }
 
+    public void SetCloudTex(ref RenderTexture[] cloudTex)
+    {
+        m_CloudTex = cloudTex;
+    }
+
     public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
         // 获取后处理组件
@@ -46,6 +51,7 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
             !showInEdit) return;
 
         CommandBuffer cmd = CommandBufferPool.Get();
+        // 添加一个分析项，方便在帧调试器中定位
         using (new ProfilingScope(cmd, m_ProfilingSampler)) {
             Render(cmd, renderingData);
         }

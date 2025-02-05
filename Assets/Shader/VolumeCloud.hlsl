@@ -336,20 +336,21 @@ float4 fragVolumeCloud(v2f i) : SV_Target
     float linearDepth = LinearEyeDepth(depth, _ZBufferParams);
     
     // 获取当前的位置
+    // _ScreenParams的xy纹理宽度和高度，z分量是1.0 + 1.0/宽度，w为1.0 + 1.0/高度。
     float2 posSS = i.vertex.xy * (_ScreenParams.zw - 1);
     float4 posNDC = float4(posSS * 2 - 1, depth, 1);
-    #if UNITY_UV_STARTS_AT_TOP
+#if UNITY_UV_STARTS_AT_TOP
     posNDC.y *= -1;
-    #endif
+#endif
     
-    #if REQUIRE_POSITION_VS
-        float4 positionVS = mul(UNITY_MATRIX_I_P, posNDC);
-        positionVS /= positionVS.w;
-        float4 posW = mul(UNITY_MATRIX_I_V, positionVS);
-    #else
-        float4 posW = mul(UNITY_MATRIX_I_VP, posNDC);
-        posW /= posW.w;
-    #endif
+#if REQUIRE_POSITION_VS
+    float4 positionVS = mul(UNITY_MATRIX_I_P, posNDC);
+    positionVS /= positionVS.w;
+    float4 posW = mul(UNITY_MATRIX_I_V, positionVS);
+#else
+    float4 posW = mul(UNITY_MATRIX_I_VP, posNDC);
+    posW /= posW.w;
+#endif
 
     Light mainLight = GetMainLight();
     float3 lightDir = normalize(mainLight.direction);
@@ -367,5 +368,27 @@ float4 fragVolumeCloud(v2f i) : SV_Target
     return cloud;
 }
 
+
+
+TEXTURE2D(_BlendCloudTex);
+TEXTURE2D(_BackTex);
+SAMPLER(sampler_BlendCloudTex);
+SAMPLER(sampler_BackTex);
+
+v2f vertBlendCloud(appdata v)
+{
+    v2f o;
+    VertexPositionInputs vertexPos = GetVertexPositionInputs(v.vertex.xyz);
+    o.vertex = vertexPos.positionCS;
+    o.uv = v.uv;
+    return o;
+}
+
+float4 fragBlendCloud(v2f i): SV_Target
+{
+    float4 cloud = SAMPLE_TEXTURE2D(_BlendCloudTex, sampler_BlendCloudTex, i.uv);
+    float4 back = SAMPLE_TEXTURE2D(_BackTex, sampler_BackTex, i.uv);
+    return float4(back.rgb * cloud.a + cloud.rgb, back.a);
+}
 
 #endif

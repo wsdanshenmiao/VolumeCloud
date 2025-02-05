@@ -47,7 +47,7 @@ public class VolumeCloudFeature : ScriptableRendererFeature
             }
         }
 
-        m_VolumeCloudRenderPass.m_CloudTex = m_CloudTex;
+        m_VolumeCloudRenderPass.SetCloudTex(ref m_CloudTex);
 
         renderer.EnqueuePass(m_VolumeCloudRenderPass);
     }
