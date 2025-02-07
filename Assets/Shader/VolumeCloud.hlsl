@@ -116,7 +116,7 @@ struct v2f
 };
 
 
-float2 SampleDensity(float3 currPos, bool enableDetail, out float weatherDensityScale)
+float2 SampleDensity(float3 currPos, bool enableDetail)
 {
     const float densityScale = 0.01;
 
@@ -127,12 +127,6 @@ float2 SampleDensity(float3 currPos, bool enableDetail, out float weatherDensity
 
     float3 windOffset = _WindDirection.xyz * _WindSpeed * _Time.y * 0.001;
     float3 uvw = currPos * 0.0001 + windOffset * 0.5;
-
-    // 边缘的衰减
-    const float edgeFadeDistance = 50;
-    float distanceX = min(edgeFadeDistance, min(_CloudBoxMax.x - currPos.x, currPos.x - _CloudBoxMin.x));
-    float distanceZ = min(edgeFadeDistance, min(_CloudBoxMax.z - currPos.z, currPos.z - _CloudBoxMin.z));
-    float edgeFade = min(distanceX, distanceZ) / edgeFadeDistance;
 
     // 获取体积云的基本形状
     float3 sampleShapeUV = uvw * _SampleShapeScale + _SampleShapeOffset.xyz;
@@ -154,12 +148,11 @@ float2 SampleDensity(float3 currPos, bool enableDetail, out float weatherDensity
     float roundTop = saturate(Remap(heightGradient, 0.2, 1, 1, 0));
     float roundFac = roundButton * roundTop;
     // 密度变化因子
-    float densityButton = heightGradient * saturate(Remap(heightGradient, 0, 0.15, 0, 1));
-    float densityTop = saturate(Remap(heightGradient, 0.9, 1, 1, 0));
+    float densityButton = heightGradient * saturate(Remap(heightGradient, 0, _DensityOffset, 0, 1));
+    float densityTop = saturate(Remap(heightGradient, 1 - _DensityOffset, 1, 1, 0));
     float densityFac = densityButton * densityTop * 2;
 
-    density *= roundFac * densityFac * edgeFade;
-    density += _DensityOffset * densityScale;
+    density *= roundFac * densityFac;
 
     if(density > 0) {
         // 为体积云添加天气属性
@@ -169,8 +162,6 @@ float2 SampleDensity(float3 currPos, bool enableDetail, out float weatherDensity
         float4 weatherTex = SAMPLE_TEXTURE2D(_WeatherNoiceTex, sampler_WeatherNoiceTex, weatherUV);
         // 云层覆盖率
         float cloudCoverage = weatherTex.r;
-        // 云层的降雨量，降雨量越大云层越密
-        weatherDensityScale = saturate(0.5 + weatherTex.g);
         cloudCoverage = lerp(cloudCoverage, 1, _CloudCoverage);
         cloudCoverage = lerp(0, cloudCoverage, _CloudCoverage);
         density *= cloudCoverage;
@@ -189,7 +180,7 @@ float2 SampleDensity(float3 currPos, bool enableDetail, out float weatherDensity
 
     density = max(0, density - _DensityThreshold * densityScale) * _DensityMultiplier;
 
-    return density * 0.1;
+    return density * 0.5;
 }
 
 // 从采样点出发，沿光照方向进行raymarching
@@ -198,7 +189,6 @@ float LightMarching(float3 currPos, float3 lightDir)
     // 总密度
     float sumDensity = 0;
     float transmittance = 1;
-    float weatherDensityScale = 1;
 
     float3 invDir = 1 / lightDir;
 
@@ -208,15 +198,17 @@ float LightMarching(float3 currPos, float3 lightDir)
     if(insertInfo.x != 0){
         [loop]
         for(int i = 0; i < _LightMarchingCount; currPos += rayStep, ++i){
-            float density = SampleDensity(currPos, true, weatherDensityScale);
+            float density = SampleDensity(currPos, true);
             sumDensity += density;
         }
     }
 
     // 计算透光率
-    float absorbance = CalcuAbsorbance(weatherDensityScale * _ExtinctionCoefficient, sumDensity, stepSize);
+    float absorbance = CalcuAbsorbance(_ExtinctionCoefficient, sumDensity, stepSize);
+    // 可选择加入糖粉效应
     transmittance = BeerLambert(absorbance);
 
+   	// 添加一个阈值来控制亮度
     return _DarknessThreshold + (1 - _DarknessThreshold) * transmittance;
 }
 
@@ -229,8 +221,6 @@ float4 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, f
     float transmittance = 1;
     // 光照强度
     float3 lightIntensity = 0;
-
-    float weatherDensityScale = 1;
 
     float3 currPos = viewRay.startPos;
     float3 rayDir = viewRay.dir;
@@ -269,7 +259,7 @@ float4 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, f
 
         // 检测是否进入大步进, 第一次进入大步进
         if(densityTest <= 0){   // 大步进
-            densityTest = SampleDensity(currPos, false, weatherDensityScale);
+            densityTest = SampleDensity(currPos, false);
 
             if(densityTest > 0){
                 currPos -= rayStep; // 回退一步，防止漏采样
@@ -282,15 +272,15 @@ float4 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, f
         }
         else{   // 普通步进
             // 计算当前点的密度
-            float density = SampleDensity(currPos, true, weatherDensityScale);
+            float density = SampleDensity(currPos, true);
 
             if(density > 0){
                 zeroDensityCount = 0;
                 
                 float lightTransmittance = LightMarching(currPos, lightDir);
-                lightIntensity += density * stepSize * transmittance * lightTransmittance * phase;
+                lightIntensity += density * stepSize * transmittance * lightTransmittance;
                 // 计算吸光率
-                float absorbance = CalcuAbsorbance(weatherDensityScale * _ExtinctionCoefficient, density, stepSize);
+                float absorbance = CalcuAbsorbance(_ExtinctionCoefficient, density, stepSize);
                 transmittance *= BeerLambert(absorbance);
                 sumDensity += density * stepSize;
                 
@@ -309,6 +299,8 @@ float4 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, f
             preDensity = density;
         }
     }
+    
+    lightIntensity *= phase;
 
     return float4(lightIntensity, transmittance);
 }

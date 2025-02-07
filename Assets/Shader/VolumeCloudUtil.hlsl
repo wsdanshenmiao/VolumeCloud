@@ -80,7 +80,7 @@ float GetDensityHeightGradient(float3 pos, float min, float max)
     return saturate(heightGradient);
 }
 
-// 改编自 Henyey-Greenstein 函数， 双 Henyey-Greenstein相位函数 的 单参数版 (原双相位函数拥有3个参数, 要确定3个参数非常复杂)
+// 改编自 Henyey-Greenstein 函数， 双 Henyey-Greenstein 相位函数 的 双参数版 (原双相位函数拥有3个参数, 要确定3个参数非常复杂)
 // g : ( -0.75, -0.999 )
 //      3 * ( 1 - g^2 )               1 + cos^2
 // F = ----------------- * -------------------------------

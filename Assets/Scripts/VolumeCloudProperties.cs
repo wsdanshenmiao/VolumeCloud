@@ -34,7 +34,7 @@ public class VolumeCloudParamer : VolumeComponent, IPostProcessComponent
     [Tooltip("消光系数")]
     public ClampedFloatParameter m_ExtinctionCoefficient = new ClampedFloatParameter(1, 0, 1);
     [Tooltip("细节影响权重")]
-    public ClampedFloatParameter m_DetailScale = new ClampedFloatParameter(1, 0, 100);
+    public ClampedFloatParameter m_DetailScale = new ClampedFloatParameter(1, 0, 10);
     [Tooltip("蓝噪声影响权重")]
     public ClampedFloatParameter m_BlueNoiceScale = new ClampedFloatParameter(1, 0, 10);
     [Tooltip("云覆盖率")]
