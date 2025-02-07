@@ -96,6 +96,8 @@ float _DetailScale;
 float _DensityThreshold;
 float _DensityMultiplier;
 
+float _CloudCoverage;
+
 int _TextureWidth;
 int _TextureHeight;
 int _CurrFrameCount;
@@ -114,7 +116,7 @@ struct v2f
 };
 
 
-float SampleDensity(float3 currPos, bool enableDetail)
+float2 SampleDensity(float3 currPos, bool enableDetail, out float weatherDensityScale)
 {
     const float densityScale = 0.01;
 
@@ -124,7 +126,7 @@ float SampleDensity(float3 currPos, bool enableDetail)
     float3 cloudSize = (_CloudBoxMax - _CloudBoxMin).xyz;
 
     float3 windOffset = _WindDirection.xyz * _WindSpeed * _Time.y * 0.001;
-    float3 uvw = currPos * 0.0001 + windOffset * 0.1;
+    float3 uvw = currPos * 0.0001 + windOffset * 0.5;
 
     // 边缘的衰减
     const float edgeFadeDistance = 50;
@@ -168,9 +170,9 @@ float SampleDensity(float3 currPos, bool enableDetail)
         // 云层覆盖率
         float cloudCoverage = weatherTex.r;
         // 云层的降雨量，降雨量越大云层越密
-        float weatherDensityScale = weatherTex.g;
-        cloudCoverage = lerp(cloudCoverage, 1, 1);
-        cloudCoverage = lerp(0, cloudCoverage, 1);
+        weatherDensityScale = saturate(0.5 + weatherTex.g);
+        cloudCoverage = lerp(cloudCoverage, 1, _CloudCoverage);
+        cloudCoverage = lerp(0, cloudCoverage, _CloudCoverage);
         density *= cloudCoverage;
 
         if(density > 0 && enableDetail){
@@ -181,13 +183,13 @@ float SampleDensity(float3 currPos, bool enableDetail)
             // 计算 Worley 噪声的FBM
             float detailFBM = dot(detailNoice, normalize(_DetailWeights.xyz));
             float detailErode = (1 - detailFBM) * densityScale * _DetailScale;
-            density = Remap(density, detailFBM * _DetailScale, 1.0, 0.0, 1.0);
+            density -= detailErode;
         }
     } 
 
     density = max(0, density - _DensityThreshold * densityScale) * _DensityMultiplier;
 
-    return density;
+    return density * 0.1;
 }
 
 // 从采样点出发，沿光照方向进行raymarching
@@ -196,6 +198,7 @@ float LightMarching(float3 currPos, float3 lightDir)
     // 总密度
     float sumDensity = 0;
     float transmittance = 1;
+    float weatherDensityScale = 1;
 
     float3 invDir = 1 / lightDir;
 
@@ -205,13 +208,13 @@ float LightMarching(float3 currPos, float3 lightDir)
     if(insertInfo.x != 0){
         [loop]
         for(int i = 0; i < _LightMarchingCount; currPos += rayStep, ++i){
-            float density = SampleDensity(currPos, true);
+            float density = SampleDensity(currPos, true, weatherDensityScale);
             sumDensity += density;
         }
     }
 
     // 计算透光率
-    float absorbance = CalcuAbsorbance(_ExtinctionCoefficient, sumDensity, stepSize);
+    float absorbance = CalcuAbsorbance(weatherDensityScale * _ExtinctionCoefficient, sumDensity, stepSize);
     transmittance = BeerLambert(absorbance);
 
     return _DarknessThreshold + (1 - _DarknessThreshold) * transmittance;
@@ -226,6 +229,8 @@ float4 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, f
     float transmittance = 1;
     // 光照强度
     float3 lightIntensity = 0;
+
+    float weatherDensityScale = 1;
 
     float3 currPos = viewRay.startPos;
     float3 rayDir = viewRay.dir;
@@ -264,7 +269,7 @@ float4 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, f
 
         // 检测是否进入大步进, 第一次进入大步进
         if(densityTest <= 0){   // 大步进
-            densityTest = SampleDensity(currPos, false);
+            densityTest = SampleDensity(currPos, false, weatherDensityScale);
 
             if(densityTest > 0){
                 currPos -= rayStep; // 回退一步，防止漏采样
@@ -277,7 +282,7 @@ float4 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, f
         }
         else{   // 普通步进
             // 计算当前点的密度
-            float density = SampleDensity(currPos, true);
+            float density = SampleDensity(currPos, true, weatherDensityScale);
 
             if(density > 0){
                 zeroDensityCount = 0;
@@ -285,7 +290,7 @@ float4 VolumeCloudRaymarching(Ray viewRay, float3 lightDir, float linearDepth, f
                 float lightTransmittance = LightMarching(currPos, lightDir);
                 lightIntensity += density * stepSize * transmittance * lightTransmittance * phase;
                 // 计算吸光率
-                float absorbance = CalcuAbsorbance(_ExtinctionCoefficient, density, stepSize);
+                float absorbance = CalcuAbsorbance(weatherDensityScale * _ExtinctionCoefficient, density, stepSize);
                 transmittance *= BeerLambert(absorbance);
                 sumDensity += density * stepSize;
                 

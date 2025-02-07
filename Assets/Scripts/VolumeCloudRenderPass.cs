@@ -109,6 +109,7 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
         m_VolumeCloudMat.SetFloat("_CloudScatter", m_VolumeCloudParamer.m_CloudScatter.value);
         m_VolumeCloudMat.SetFloat("_BlueNoiceScale", m_VolumeCloudParamer.m_BlueNoiceScale.value);
         m_VolumeCloudMat.SetFloat("_WindSpeed", m_VolumeCloudParamer.m_WindSpeed.value);
+        m_VolumeCloudMat.SetFloat("_CloudCoverage", m_VolumeCloudParamer.m_CloudCoverage.value);
 
         m_VolumeCloudMat.SetVector("_SampleShapeOffset", m_VolumeCloudParamer.m_SampleShapeOffset.value);
         m_VolumeCloudMat.SetVector("_SampleDetailOffset", m_VolumeCloudParamer.m_SampleDetailOffset.value);

@@ -84,31 +84,34 @@ MonoBehaviour:
     m_Value: 1
   m_CloudScatter:
     m_OverrideState: 1
-    m_Value: 0.5
+    m_Value: 0.7
   m_WindSpeed:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 289.5
   m_DensityThreshold:
     m_OverrideState: 1
     m_Value: 0
   m_DarknessThreshold:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.082
   m_ExtinctionCoefficient:
     m_OverrideState: 1
-    m_Value: 0.069
+    m_Value: 0.5
   m_DetailScale:
     m_OverrideState: 1
-    m_Value: 3.1
+    m_Value: 11.4
   m_BlueNoiceScale:
     m_OverrideState: 1
     m_Value: 0
+  m_CloudCoverage:
+    m_OverrideState: 1
+    m_Value: 0.376
   m_CloudBoxCenter:
     m_OverrideState: 1
     m_Value: {x: 0, y: 1500, z: 0}
   m_CloudBoxSize:
     m_OverrideState: 1
-    m_Value: {x: 8000, y: 1000, z: 8000}
+    m_Value: {x: 8000, y: 1500, z: 8000}
   m_SampleShapeOffset:
     m_OverrideState: 1
     m_Value: {x: 0, y: 0, z: 0}

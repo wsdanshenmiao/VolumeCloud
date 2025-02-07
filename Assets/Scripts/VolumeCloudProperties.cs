@@ -37,6 +37,8 @@ public class VolumeCloudParamer : VolumeComponent, IPostProcessComponent
     public ClampedFloatParameter m_DetailScale = new ClampedFloatParameter(1, 0, 100);
     [Tooltip("蓝噪声影响权重")]
     public ClampedFloatParameter m_BlueNoiceScale = new ClampedFloatParameter(1, 0, 10);
+    [Tooltip("云覆盖率")]
+    public ClampedFloatParameter m_CloudCoverage = new ClampedFloatParameter(0.5f, 0, 1);
 
     [Tooltip("体积云中心")]
     public Vector3Parameter m_CloudBoxCenter = new Vector3Parameter(Vector3.zero);
