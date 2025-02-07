@@ -43,4 +43,96 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7fd9488000d3734a9e00ee676215985, type: 3}
   m_Name: SampleSceneProfile
   m_EditorClassIdentifier: 
-  components: []
+  components:
+  - {fileID: 5178405161107011826}
+--- !u!114 &5178405161107011826
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50ff97bac73ad964ab6f9694bfcb32e3, type: 3}
+  m_Name: VolumeCloudParamer
+  m_EditorClassIdentifier: 
+  active: 1
+  m_EnableInEdit:
+    m_OverrideState: 1
+    m_Value: 1
+  m_ShapeMarchingCount:
+    m_OverrideState: 1
+    m_Value: 43
+  m_LightMarchingCount:
+    m_OverrideState: 1
+    m_Value: 9
+  m_LargeStepThreshold:
+    m_OverrideState: 1
+    m_Value: 6
+  m_DensityOffset:
+    m_OverrideState: 1
+    m_Value: 0
+  m_SampleShapeScale:
+    m_OverrideState: 1
+    m_Value: 1.69
+  m_SampleDetailScale:
+    m_OverrideState: 1
+    m_Value: 1
+  m_DensityMultiplier:
+    m_OverrideState: 1
+    m_Value: 1
+  m_CloudScatter:
+    m_OverrideState: 1
+    m_Value: 0.5
+  m_WindSpeed:
+    m_OverrideState: 1
+    m_Value: 0
+  m_DensityThreshold:
+    m_OverrideState: 1
+    m_Value: 0
+  m_DarknessThreshold:
+    m_OverrideState: 1
+    m_Value: 0
+  m_ExtinctionCoefficient:
+    m_OverrideState: 1
+    m_Value: 0.069
+  m_DetailScale:
+    m_OverrideState: 1
+    m_Value: 3.1
+  m_BlueNoiceScale:
+    m_OverrideState: 1
+    m_Value: 0
+  m_CloudBoxCenter:
+    m_OverrideState: 1
+    m_Value: {x: 0, y: 1500, z: 0}
+  m_CloudBoxSize:
+    m_OverrideState: 1
+    m_Value: {x: 8000, y: 1000, z: 8000}
+  m_SampleShapeOffset:
+    m_OverrideState: 1
+    m_Value: {x: 0, y: 0, z: 0}
+  m_SampleDetailOffset:
+    m_OverrideState: 1
+    m_Value: {x: 0, y: 0, z: 0}
+  m_DetailWeights:
+    m_OverrideState: 1
+    m_Value: {x: 0.65, y: 0.25, z: 0.125}
+  m_ShapeWeights:
+    m_OverrideState: 1
+    m_Value: {x: 0.65, y: 0.25, z: 0.125}
+  m_WindDirection:
+    m_OverrideState: 1
+    m_Value: {x: 1, y: 0, z: 0}
+  m_ShapeNoiceTex:
+    m_OverrideState: 1
+    m_Value: {fileID: 11700000, guid: 70c2adccd53fd45468d11570134863c2, type: 2}
+  m_DetailNoiceTex:
+    m_OverrideState: 1
+    m_Value: {fileID: 11700000, guid: 206e9646e82f94c249cda79e716d3f1d, type: 2}
+  m_WeatherNoiceTex:
+    m_OverrideState: 1
+    m_Value: {fileID: 2800000, guid: 2982bac01a8e15e4d84776fe042cdb98, type: 3}
+  m_BlueNoiceTex:
+    m_OverrideState: 1
+    m_Value: {fileID: 2800000, guid: 5bb92e256168a454aa369217d922e1b3, type: 3}

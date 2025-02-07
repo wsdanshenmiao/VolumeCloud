@@ -22,6 +22,7 @@ Shader "DSMRender/VolumeCloud"
 
         Pass
         {
+            Blend Off
             Name "BlendVolumeCloud"
             HLSLPROGRAM
             #pragma vertex vertBlendCloud

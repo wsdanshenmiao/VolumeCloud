@@ -89,6 +89,7 @@ public class VolumeCloudRenderPass : ScriptableRenderPass
         m_VolumeCloudMat.SetTexture("_ShapeNoiceTex", m_VolumeCloudParamer.m_ShapeNoiceTex.value);
         m_VolumeCloudMat.SetTexture("_DetailNoiceTex", m_VolumeCloudParamer.m_DetailNoiceTex.value);
         m_VolumeCloudMat.SetTexture("_BlueNoiceTex", m_VolumeCloudParamer.m_BlueNoiceTex.value);
+        m_VolumeCloudMat.SetTexture("_WeatherNoiceTex", m_VolumeCloudParamer.m_WeatherNoiceTex.value);
 
         m_VolumeCloudMat.SetInt("_ShapeMarchingCount", m_VolumeCloudParamer.m_ShapeMarchingCount.value);
         m_VolumeCloudMat.SetInt("_LightMarchingCount", m_VolumeCloudParamer.m_LightMarchingCount.value);
